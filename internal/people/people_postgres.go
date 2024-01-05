@@ -14,20 +14,20 @@ func NewPostgres(db *sql.DB) *PeoplePosgres {
 	return &PeoplePosgres{DB: db}
 }
 
-func (client *PeoplePosgres) Create(ctx context.Context, people *People) error {
+func (client *PeoplePosgres) Create(ctx context.Context, people *People) (string, error) {
 	stmt, err := client.DB.Prepare(`INSERT INTO public.people
 	(id, apelido, nome, nascimento, stack)
-	VALUES(gen_random_uuid(), $1, $2, $3, $4);`)
+	VALUES(gen_random_uuid(), $1, $2, $3, $4) RETURNING id;`)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer stmt.Close()
-
-	_, err = stmt.Exec(people.Apelido, people.Nome, people.Nascimento, strings.Join(people.Stack[:], " "))
+	var id string
+	err = stmt.QueryRow(people.Apelido, people.Nome, people.Nascimento, strings.Join(people.Stack[:], " ")).Scan(&id)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return id, nil
 }
 func (client *PeoplePosgres) FindById(ctx context.Context, id string) (*People, error) {
 	stmt, err := client.DB.Prepare(`select p.apelido, p.id, p.nome, p.nascimento, p.stack from public.people p where p.id = $1;`)
@@ -53,13 +53,8 @@ func (client *PeoplePosgres) Find(ctx context.Context, query string) (*[]People,
 	}
 	defer stmt.Close()
 	peoples := []People{}
+	rows, err := stmt.Query(query)
 
-	var rows *sql.Rows
-	if query == "" {
-		rows, err = client.DB.Query(`select p.apelido, p.id, p.nome, p.nascimento, p.stack from public.people p LIMIT 50`)
-	} else {
-		rows, err = stmt.Query(query)
-	}
 	for rows.Next() {
 		p := People{}
 		var stacks string

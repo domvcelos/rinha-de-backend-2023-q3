@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
-	"github.com/domvcelos/rinha-de-backend-2023-q3/configs"
 	"github.com/domvcelos/rinha-de-backend-2023-q3/internal/people"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
@@ -15,13 +15,13 @@ import (
 )
 
 func main() {
-	config, err := configs.LoadConfig(".")
-	if err != nil {
-		log.Fatalf("Unable to read configuration file: %v", err)
-	}
+	// err := godotenv.Load(".env")
+	// if err != nil {
+	// 	log.Fatalf("Some error occured. Err: %s", err)
+	// }
 	dataSourceName := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		config.DBHost, config.DBPort, config.DBUser, config.DBPassword, config.DBName)
-	db, err := sql.Open(config.DBDriver, dataSourceName)
+		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
+	db, err := sql.Open(os.Getenv("DB_DRIVER"), dataSourceName)
 	if err != nil {
 		log.Fatalf("Unable to connect with database: %v", err)
 	}
@@ -41,15 +41,14 @@ func main() {
 	peopleRepository := people.NewPostgres(db)
 	peopleService := people.NewService(peopleRepository)
 	peopleHandler := people.NewHandler(peopleService)
-
+	router.Get("/contagem-pessoas", peopleHandler.Count)
 	router.Route("/pessoas", func(r chi.Router) {
 		r.Post("/", peopleHandler.Create)
 		r.Get("/{peopleID}", peopleHandler.FindById)
-		r.Get("/count", peopleHandler.Count)
 		r.Get("/", peopleHandler.Find)
 	})
-	fmt.Println("Starting server at port: 8080...")
-	err = http.ListenAndServe(":8080", router)
+	fmt.Println("Starting server at port: " + os.Getenv("SERVER_PORT"))
+	err = http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), router)
 	if err != nil {
 		log.Fatalf("Unable start a server: %v", err)
 	}

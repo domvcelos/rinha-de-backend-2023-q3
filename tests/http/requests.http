@@ -1,0 +1,39 @@
+@hostname = http://localhost:9999
+# @hostname = http://api
+
+
+###
+# @prompt apelido
+# @prompt nome
+POST {{hostname}}/pessoa HTTP/1.1
+content-type: application/json
+
+{
+    "apelido" : "{{apelido}}",
+    "nome" : "{{nome}}",
+    "nascimento" : "1985-09-23",
+    "stack" : null
+}
+
+###
+POST {{hostname}}/pessoas HTTP/1.1
+content-type: application/json
+
+{
+    "apelido" : "any2",
+    "nome" : "bruno",
+    "nascimento" : "1985-09-23",
+    "stack" : ["Node", "Go"]
+}
+
+###
+GET {{hostname}}/pessoas/628e8435-1483-43e1-b107-fbdcb8bd45b2 HTTP/1.1
+
+###
+GET {{hostname}}/contagem-pessoas HTTP/1.1
+
+###
+GET {{hostname}}/pessoas/?t=a HTTP/1.1
+
+###
+GET {{hostname}}/pessoas HTTP/1.1

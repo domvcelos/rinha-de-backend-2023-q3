@@ -13,9 +13,6 @@ import (
 type PeopleHandler struct {
 	Service PeopleServiceInterface
 }
-type CountResponse struct {
-	Count int `json:"count"`
-}
 
 func NewHandler(ps PeopleServiceInterface) *PeopleHandler {
 	return &PeopleHandler{
@@ -28,7 +25,7 @@ func (handler *PeopleHandler) Create(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&dto)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
-		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.WriteHeader(http.StatusBadRequest)
 		error := pkg.Error{Message: err.Error()}
 		json.NewEncoder(w).Encode(error)
 		return
@@ -49,13 +46,14 @@ func (handler *PeopleHandler) Create(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(error)
 		return
 	}
-	err = handler.Service.Create(r.Context(), p)
+	id, err := handler.Service.Create(r.Context(), p)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		error := pkg.Error{Message: err.Error()}
 		_ = json.NewEncoder(w).Encode(error)
 		return
 	}
+	w.Header().Set("Location", "/pessoas/"+id)
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -74,12 +72,18 @@ func (handler *PeopleHandler) FindById(w http.ResponseWriter, r *http.Request) {
 }
 func (handler *PeopleHandler) Find(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("t")
-	resp, err := handler.Service.Find(r.Context(), query)
 	w.Header().Set("Content-Type", "application/json")
+	if query == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		error := pkg.Error{Message: "Query string nao informada!"}
+		json.NewEncoder(w).Encode(error)
+		return
+	}
+	resp, err := handler.Service.Find(r.Context(), query)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		error := pkg.Error{Message: err.Error()}
-		_ = json.NewEncoder(w).Encode(error)
+		json.NewEncoder(w).Encode(error)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -96,5 +100,5 @@ func (handler *PeopleHandler) Count(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(CountResponse{Count: resp})
+	json.NewEncoder(w).Encode(resp)
 }
