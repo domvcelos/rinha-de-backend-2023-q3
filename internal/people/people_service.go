@@ -5,7 +5,7 @@ import (
 )
 
 type PeopleServiceInterface interface {
-	Create(ctx context.Context, p *People) error
+	Create(ctx context.Context, p *People) (string, error)
 	FindById(ctx context.Context, id string) (*People, error)
 	Count(ctx context.Context) (int, error)
 	Find(ctx context.Context, query string) (*[]People, error)
@@ -21,12 +21,12 @@ func NewService(pr PeopleRepository) *PeopleService {
 	}
 }
 
-func (service *PeopleService) Create(ctx context.Context, p *People) error {
-	err := service.Repository.Create(ctx, p)
+func (service *PeopleService) Create(ctx context.Context, p *People) (string, error) {
+	id, err := service.Repository.Create(ctx, p)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return id, nil
 }
 
 func (service *PeopleService) FindById(ctx context.Context, id string) (*People, error) {
