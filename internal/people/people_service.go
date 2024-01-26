@@ -2,6 +2,8 @@ package people
 
 import (
 	"context"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type PeopleServiceInterface interface {
@@ -13,43 +15,14 @@ type PeopleServiceInterface interface {
 
 type PeopleService struct {
 	Repository PeopleRepository
+	Cache      *redis.Client
+	Channel    chan<- *People
 }
 
-func NewService(pr PeopleRepository) *PeopleService {
+func NewService(pr PeopleRepository, cache *redis.Client, ch chan<- *People) *PeopleService {
 	return &PeopleService{
 		Repository: pr,
+		Cache:      cache,
+		Channel:    ch,
 	}
-}
-
-func (service *PeopleService) Create(ctx context.Context, p *People) (string, error) {
-	id, err := service.Repository.Create(ctx, p)
-	if err != nil {
-		return "", err
-	}
-	return id, nil
-}
-
-func (service *PeopleService) FindById(ctx context.Context, id string) (*People, error) {
-	result, err := service.Repository.FindById(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-func (service *PeopleService) Find(ctx context.Context, query string) (*[]People, error) {
-	result, err := service.Repository.Find(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-func (service *PeopleService) Count(ctx context.Context) (int, error) {
-	count, err := service.Repository.Count(ctx)
-	if err != nil {
-		return count, err
-	}
-	return count, nil
-
 }

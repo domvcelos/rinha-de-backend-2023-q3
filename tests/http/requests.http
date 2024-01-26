@@ -1,11 +1,12 @@
-@hostname = http://localhost:9999
-# @hostname = http://api
+# @hostname = http://localhost:9999
+@hostname = http://localhost:8080
+
 
 
 ###
 # @prompt apelido
 # @prompt nome
-POST {{hostname}}/pessoa HTTP/1.1
+POST {{hostname}}/pessoas HTTP/1.1
 content-type: application/json
 
 {
@@ -27,7 +28,7 @@ content-type: application/json
 }
 
 ###
-GET {{hostname}}/pessoas/628e8435-1483-43e1-b107-fbdcb8bd45b2 HTTP/1.1
+GET {{hostname}}/pessoas/1ceb0515-de55-406e-a93d-251e5ecc48e2 HTTP/1.1
 
 ###
 GET {{hostname}}/contagem-pessoas HTTP/1.1

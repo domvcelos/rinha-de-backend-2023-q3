@@ -16,8 +16,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.7"
-          memory: "1GB"
+          cpus: '1.1'
+          memory: '1.6GB'
     volumes:
       - ./scripts/database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./scripts/database/postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
@@ -49,11 +49,12 @@ services:
       - DB_PORT=5432
       - CPU_PROFILE=/app/prof/cpu-1.prof
       - MEM_PROFILE=/app/prof/mem-1.prof
-      - CACHE_HOST=cache
+      - CACHE_HOST=localhost
       - CACHE_PORT=6379
       - SERVER_PORT=8080
       - ENABLE_PROFILING=0
       - ENABLE_PREFORK=0
+      - ENV=CONTAINER
     volumes:
       - ./prof:/app/prof
     depends_on:
@@ -62,8 +63,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.2"
-          memory: "0.5GB"
+          cpus: '0.1'
+          memory: '0.3GB'
 
   api2:
     restart: always
@@ -80,11 +81,12 @@ services:
       - DB_PORT=5432
       - CPU_PROFILE=/app/prof/cpu-1.prof
       - MEM_PROFILE=/app/prof/mem-1.prof
-      - CACHE_HOST=redis
+      - CACHE_HOST=localhost
       - CACHE_PORT=6379
       - SERVER_PORT=8081
       - ENABLE_PROFILING=0
       - ENABLE_PREFORK=0
+      - ENV=CONTAINER
     volumes:
       - ./prof:/app/prof
     depends_on:
@@ -93,8 +95,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.2"
-          memory: "0.5GB"
+          cpus: "0.1"
+          memory: "0.3GB"
   nginx:
     image: nginx
     hostname: api
@@ -109,21 +111,21 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
-          memory: "0.5GB"
-  # redis:
-  #   image: redis:latest
-  #   hostname: redis
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - ./scripts/redis/:/etc/redis/
-  #   command: [ "redis-server", "/etc/redis/redis.conf" ]
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         cpus: "0.15"
-  #         memory: "0.5GB"
+          cpus: '0.1'
+          memory: '0.5GB'
+  redis:
+    image: redis:latest
+    hostname: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./scripts/redis/:/etc/redis/
+    command: [ "redis-server", "/etc/redis/redis.conf" ]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: '0.3GB'
 volumes:
   postgres-db:
 
