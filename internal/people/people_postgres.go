@@ -1,81 +1,16 @@
 package people
 
 import (
-	"context"
 	"database/sql"
-	"strings"
+
+	"github.com/redis/go-redis/v9"
 )
 
-type PeoplePosgres struct {
-	DB *sql.DB
+type PeoplePostgres struct {
+	DB    *sql.DB
+	Cache *redis.Client
 }
 
-func NewPostgres(db *sql.DB) *PeoplePosgres {
-	return &PeoplePosgres{DB: db}
-}
-
-func (client *PeoplePosgres) Create(ctx context.Context, people *People) (string, error) {
-	stmt, err := client.DB.Prepare(`INSERT INTO public.people
-	(id, apelido, nome, nascimento, stack)
-	VALUES(gen_random_uuid(), $1, $2, $3, $4) RETURNING id;`)
-	if err != nil {
-		return "", err
-	}
-	defer stmt.Close()
-	var id string
-	err = stmt.QueryRow(people.Apelido, people.Nome, people.Nascimento, strings.Join(people.Stack[:], " ")).Scan(&id)
-	if err != nil {
-		return "", err
-	}
-	return id, nil
-}
-func (client *PeoplePosgres) FindById(ctx context.Context, id string) (*People, error) {
-	stmt, err := client.DB.Prepare(`select p.apelido, p.id, p.nome, p.nascimento, p.stack from public.people p where p.id = $1;`)
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
-	p := People{}
-	var stacks string
-	err = stmt.QueryRow(id).Scan(&p.Apelido, &p.Id, &p.Nome, &p.Nascimento, &stacks)
-	if err != nil {
-		return nil, err
-	}
-	if stacks != "" {
-		p.Stack = strings.Split(stacks, " ")
-	}
-	return &p, nil
-}
-func (client *PeoplePosgres) Find(ctx context.Context, query string) (*[]People, error) {
-	stmt, err := client.DB.Prepare(`select p.apelido, p.id, p.nome, p.nascimento, p.stack from public.people p where p.busca_tgrm ilike '%'||$1||'%' LIMIT 50;`)
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
-	peoples := []People{}
-	rows, err := stmt.Query(query)
-
-	for rows.Next() {
-		p := People{}
-		var stacks string
-		err = rows.Scan(&p.Apelido, &p.Id, &p.Nome, &p.Nascimento, &stacks)
-		if stacks != "" {
-			p.Stack = strings.Split(stacks, " ")
-		}
-		peoples = append(peoples, p)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return &peoples, nil
-}
-
-func (client *PeoplePosgres) Count(ctx context.Context) (int, error) {
-	var count int
-	err := client.DB.QueryRow("select count(*) from public.people").Scan(&count)
-	if err != nil {
-		return 0, err
-	}
-	return count, nil
+func NewPostgres(db *sql.DB, cache *redis.Client) *PeoplePostgres {
+	return &PeoplePostgres{DB: db, Cache: cache}
 }
