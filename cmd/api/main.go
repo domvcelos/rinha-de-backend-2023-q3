@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/domvcelos/rinha-de-backend-2023-q3/internal/people"
@@ -53,11 +54,11 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Heartbeat("/health-check"))
 	router.Use(middleware.Timeout(60 * time.Second))
-	createPeopleChan := make(chan *people.People)
+	createPeopleChan := make(chan *people.People, 10)
 	peopleRepository := people.NewPostgres(db, rdb)
-	QtdWorkers := 100
+	QtdWorkers := runtime.GOMAXPROCS(0) * 2
 	for i := 0; i < QtdWorkers; i++ {
-		go peopleRepository.Create(ctx, createPeopleChan)
+		go people.RunWorker(ctx, createPeopleChan, peopleRepository, 1000)
 	}
 	peopleService := people.NewService(peopleRepository, rdb, createPeopleChan)
 	peopleHandler := people.NewHandler(peopleService)
