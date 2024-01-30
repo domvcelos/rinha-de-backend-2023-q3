@@ -64,7 +64,7 @@ services:
       resources:
         limits:
           cpus: '0.1'
-          memory: '0.3GB'
+          memory: '0.15GB'
 
   api2:
     restart: always
@@ -96,7 +96,7 @@ services:
       resources:
         limits:
           cpus: "0.1"
-          memory: "0.3GB"
+          memory: "0.15GB"
   nginx:
     image: nginx
     hostname: api
@@ -125,7 +125,7 @@ services:
       resources:
         limits:
           cpus: '0.1'
-          memory: '0.3GB'
+          memory: '0.5GB'
 volumes:
   postgres-db:
 

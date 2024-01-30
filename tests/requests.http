@@ -1,5 +1,5 @@
-# @hostname = http://localhost:9999
-@hostname = http://localhost:8080
+@hostname = http://localhost:9999
+# @hostname = http://localhost:8080
 
 
 
@@ -21,7 +21,7 @@ POST {{hostname}}/pessoas HTTP/1.1
 content-type: application/json
 
 {
-    "apelido" : "any2",
+    "apelido" : "any1",
     "nome" : "bruno",
     "nascimento" : "1985-09-23",
     "stack" : ["Node", "Go"]

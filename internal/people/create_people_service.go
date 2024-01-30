@@ -2,6 +2,7 @@ package people
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -11,17 +12,25 @@ import (
 )
 
 func (s *PeopleService) Create(ctx context.Context, p *People) (string, error) {
-	cacheKey := strings.ToLower(p.Apelido)
-	cachedData, err := s.Cache.Get(ctx, cacheKey).Result()
+	apleidoCacheKey := strings.ToLower(p.Apelido)
+	cachedData, err := s.Cache.Get(ctx, apleidoCacheKey).Result()
 	if err != redis.Nil && cachedData != "" {
 		return "", errors.New("nickname already exist")
 	}
 	id := (uuid.New()).String()
 	p.Id = id
 	s.Channel <- p
-	err = s.Cache.Set(ctx, cacheKey, p.Apelido, 0).Err()
+	err = s.Cache.Set(ctx, apleidoCacheKey, p.Apelido, 0).Err()
 	if err != nil {
-		fmt.Print("Failed to set cache")
+		fmt.Print("Failed to set cache nickname")
+	}
+	dataToCache, err := json.Marshal(p)
+	if err != nil {
+		fmt.Print("Failed to marshal resp")
+	}
+	err = s.Cache.Set(ctx, id, dataToCache, 0).Err()
+	if err != nil {
+		fmt.Print("Failed to set cache people")
 	}
 	return id, nil
 }
